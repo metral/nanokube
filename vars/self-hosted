@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# Global vars
+
+# k8s Component Paths
+LOCAL_MANIFESTS_DIR="./manifests"
+MANIFESTS_DIR="/etc/kubernetes/manifests"
+
+# Pod names
+APISERVER_POD_NAME="kube-apiserver"
+CTRLR_MGR_POD_NAME="kube-controller-manager"
+SCHEDULER_POD_NAME="kube-scheduler"
+PROXY_POD_NAME="kube-proxy"

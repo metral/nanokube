@@ -1,0 +1,54 @@
+#!/bin/bash
+
+# Global vars
+
+# Kubernetes version to install
+KUBERNETES_VERSION="v1.3.0"
+HYPERKUBE_VERSION=${KUBERNETES_VERSION}
+
+# Docker
+DOCKER="/usr/bin/docker"
+DOCKER_DEFAULT="/etc/default/docker"
+
+# Docker images
+HYPERKUBE_IMAGE_REPO="gcr.io/google_containers/hyperkube"
+
+# hyperkube settings
+HYPERKUBE_BIN_SOURCE="https://storage.googleapis.com/kubernetes-release/release/${HYPERKUBE_VERSION}/bin/linux/amd64/hyperkube"
+HYPERKUBE="/usr/bin/hyperkube"
+
+# kubectl settings
+KUBECTL_BIN_SOURCE="https://storage.googleapis.com/kubernetes-release/release/${KUBERNETES_VERSION}/bin/linux/amd64/kubectl"
+KUBECTL="/usr/bin/kubectl"
+
+# etcd settings
+ETCD_NAME="etcd"
+ETCD_HOST="localhost"
+ETCD_PORT="4001"
+ETCD_VERSION="v2.3.7"
+
+# flannel settings
+FLANNEL="/usr/bin/flanneld"
+FLANNEL_ENV="/run/flannel/subnet.env"
+FLANNEL_VERSION="0.5.5"
+
+# Master settings
+MASTER_PRIVATE_IF=eth1
+PRIVATE_MASTER_HOST="$(ip -4 a s $MASTER_PRIVATE_IF | grep inet | awk '{print $2}' | cut -f1 -d"/")"
+PRIVATE_MASTER_LB_HOST="${PRIVATE_MASTER_HOST}"   # Should be LB virtual IP for cert SAN & kubeconfig's
+
+# Node settings
+NODE_PRIVATE_IF=eth1
+PRIVATE_NODE_HOST="$(ip -4 a s $NODE_PRIVATE_IF | grep inet | awk '{print $2}' | cut -f1 -d"/")"
+
+# Cluster Network settings
+SERVICE_CIDR="10.32.0.0/24"         # CIDR for all k8s Services
+APISERVER_SERVICE_IP="10.32.0.1"    # Expected k8s Service IP of kube-apiserver // used as SAN in TLS cert generation
+DNS_SERVICE_IP="10.32.0.10"         # Expected k8s Service IP of kube-dns // used as SAN in TLS cert generation
+PODS_CIDR="10.33.0.0/16"            # CIDR for all k8s Pods
+DNS_DOMAIN="cluster.local"          # DNS Domain for k8s cluster
+
+# k8s Component Paths
+CERT_DIR="/etc/kubernetes/ssl"
+TEMPLATES_DIR="./templates"
+ADDONS_DIR="./addons"
