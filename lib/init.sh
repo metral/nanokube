@@ -252,6 +252,20 @@ get_flannel(){
 #-------------------------------------------------------------------------------
 # Launch flannel
 
+config_flannel_opts(){
+  echo "Configuring flannel options..."
+
+  mkdir -p /etc/flannel
+  mkdir -p /run/flannel
+
+  cat >> /etc/flannel/options.env << EOF
+FLANNELD_IFACE=${MASTER_PRIVATE_IF}
+FLANNELD_ETCD_ENDPOINTS=http://${ETCD_HOST}:${ETCD_PORT}
+EOF
+
+  ln -sf /etc/flannel/options.env /run/flannel/options.env
+}
+
 init_flannel(){
   echo "Waiting for etcd..."
   while true
@@ -276,13 +290,17 @@ init_flannel(){
   fi
 }
 
+setup_flannel(){
+  echo "=> Setting up flannel..."
+  config_flannel_opts
+  init_flannel
+}
+#-------------------------------------------------------------------------------
 start_flannel(){
   echo "=> Starting flannel..."
 
-  init_flannel
-
   FLANNEL_LOG="/tmp/flannel.log"
-  ${FLANNEL} -etcd-endpoints=http://$ETCD_HOST:$ETCD_PORT -iface=$MASTER_PRIVATE_IF > ${FLANNEL_LOG} 2>&1 &
+  ${FLANNEL} > ${FLANNEL_LOG} 2>&1 &
   FLANNEL_PID=$!
 }
 #-------------------------------------------------------------------------------
@@ -295,6 +313,7 @@ stop_flannel(){
   [[ -n "${FLANNEL_PID-}" ]] && FLANNEL_PIDS=$(pgrep -P ${FLANNEL_PID} ; ps -o pid= -p ${FLANNEL_PID})
   [[ -n "${FLANNEL_PIDS-}" ]] && kill_pid ${FLANNEL_PIDS}
 
+  rm -rf /etc/flannel
   rm -rf /run/flannel
   ip link set flannel.1 down
   ip link delete flannel.1
@@ -386,6 +405,7 @@ self_hosted_install(){
   render_manifests
   render_addons
   start_etcd      # runs as a Docker container
+  setup_flannel
   start_flannel     # runs as a binary
   reconfig_docker
   start_sys_hosted_kubelet "kubelet-master-node"    # runs as a privileged Docker container
@@ -428,6 +448,7 @@ traditional_install() {
   render_kubeconfig
   render_addons
   start_etcd      # runs as a Docker container
+  setup_flannel
   start_flannel     # runs as a binary
   reconfig_docker
   start_master
