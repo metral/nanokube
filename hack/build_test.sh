@@ -1,35 +1,22 @@
 #!/bin/bash
+set -e
 
 source lib/init.sh
 
-# test self hosted install
-self_hosted_install
-#test dns working with kubectl
-# cleanup
-source vars/self-hosted
-source lib/self-hosted.sh
-cleanup_k8s
-stop_addons
-stop_master
-stop_node
-stop_sys_hosted_kubelet
-stop_etcd
-stop_flannel
-cleanup_all_containers
-reset_docker
-rm -rf /etc/kubernetes
-
 # test traditional/binary install
+echo "--------------------------------------------"
+trap traditional_install_cleanup ERR
 traditional_install
-#test dns working with kubectl
-# cleanup
-source lib/traditional.sh
-cleanup_k8s
-stop_addons
-stop_master
-stop_node
-stop_etcd
-stop_flannel
-cleanup_all_containers
-reset_docker
-rm -rf /etc/kubernetes
+#TODO test DNS is working via kubectl
+if [ $? -eq 0 ]; then
+  traditional_install_cleanup "false"
+fi
+
+# test self hosted install
+echo "--------------------------------------------"
+trap self_hosted_install_cleanup ERR
+self_hosted_install
+#TODO test DNS is working via kubectl
+if [ $? -eq 0 ]; then
+  self_hosted_install_cleanup "false"
+fi

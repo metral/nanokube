@@ -193,7 +193,7 @@ check_nodes(){
     while true;
     do
         kubelet=$(${KUBECTL} --kubeconfig=${CERT_DIR}/kubeconfig --server=https://${PRIVATE_MASTER_HOST} get no | grep "NotReady" | wc -l)
-        proxy_pod_name=$(docker ps --format '{{.Names}}' | grep "k8s_kube-proxy")
+        proxy_pod_name=$(docker ps --format '{{.Names}}' | grep "k8s_kube-proxy" || :)
         if [[ $kubelet == 0 ]] && [ -n "$proxy_pod_name" ]; then
             echo "`${KUBECTL} --kubeconfig=${CERT_DIR}/kubeconfig --server=https://${PRIVATE_MASTER_HOST} get no`"
             return 0

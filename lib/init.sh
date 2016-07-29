@@ -74,7 +74,7 @@ render_addons() {
 
 generate_certs() {
     echo "=> Generating certs..."
-    /usr/sbin/groupadd -r kube-cert > /dev/null 2>&1
+    /usr/sbin/groupadd -f -r kube-cert > /dev/null 2>&1
     ./make-ca-cert.sh IP:$PRIVATE_MASTER_LB_HOST,IP:$PRIVATE_MASTER_HOST,IP:$APISERVER_SERVICE_IP,IP:127.0.0.1,DNS:localhost,DNS:kubernetes,DNS:kubernetes.default,DNS:kubernetes.default.svc
 }
 #-------------------------------------------------------------------------------
@@ -90,8 +90,8 @@ cleanup_docker_container() {
         rm -f $cidfile
     fi
 
-    docker kill $container_name > /dev/null 2>&1
-    docker rm -f $container_name > /dev/null 2>&1
+    docker kill $container_name > /dev/null 2>&1 || :
+    docker rm -f $container_name > /dev/null 2>&1 || :
 }
 #-------------------------------------------------------------------------------
 cleanup_all_containers(){
@@ -309,14 +309,13 @@ start_flannel(){
 stop_flannel(){
   echo "=> Stopping flannel..."
 
-  ## Check if the flannel is still running
+  # Check if the flannel is still running
   [[ -n "${FLANNEL_PID-}" ]] && FLANNEL_PIDS=$(pgrep -P ${FLANNEL_PID} ; ps -o pid= -p ${FLANNEL_PID})
   [[ -n "${FLANNEL_PIDS-}" ]] && kill_pid ${FLANNEL_PIDS}
 
-  rm -rf /etc/flannel
-  rm -rf /run/flannel
-  ip link set flannel.1 down
-  ip link delete flannel.1
+  [ -e /etc/flannel ] && rm -rf /etc/flannel
+  [ -e /run/flannel ] && rm -rf /run/flannel
+  [ -d /sys/class/net/flannel.1 ] && ip link set flannel.1 down && ip link delete flannel.1
 }
 #-------------------------------------------------------------------------------
 # Reconfigure Docker to use the flannel interface as the bridge with an MTU
@@ -324,22 +323,29 @@ stop_flannel(){
 reconfig_docker(){
   echo "=> Reconfiguring Docker to use flannel..."
 
-  until [ -f ${FLANNEL_ENV} ]
-  do
-    sleep 1
-  done
+  local i
+  local times=15
+  local wait=1
+  for i in $(seq 1 $times); do
+    if [ -f ${FLANNEL_ENV} ]; then
+      source ${FLANNEL_ENV}
 
-  source ${FLANNEL_ENV}
-
-  cp -r ${DOCKER_DEFAULT} /tmp/ > /dev/null 2>&1
-  cat >> ${DOCKER_DEFAULT} << EOF
+      cp -r ${DOCKER_DEFAULT} /tmp/ > /dev/null 2>&1
+      cat >> ${DOCKER_DEFAULT} << EOF
 DOCKER_OPTS="--bip=${FLANNEL_SUBNET} --mtu=${FLANNEL_MTU}"
 EOF
 
-  service docker restart
+      service docker restart
 
-  echo "==> Waiting for etcd to come up..."
-  wait_for_url "http://${ETCD_HOST}:${ETCD_PORT}/v2/machines" "etcd: " 0.25 80
+      echo "==> Waiting for etcd to come up..."
+      wait_for_url "http://${ETCD_HOST}:${ETCD_PORT}/v2/machines" "etcd: " 0.25 80
+
+      return 0
+    fi
+    sleep ${wait}
+  done
+  error_exit "Timed out waiting for Docker to reconfigure; tried ${times} waiting ${wait} between each"
+  return 1
 }
 #-------------------------------------------------------------------------------
 # Reset Docker to not use flannel
@@ -354,41 +360,41 @@ reset_docker(){
 # Launch kube_dns in k8s
 
 start_kube_dns(){
-    echo "=> Starting dns..."
+  echo "=> Starting dns..."
 
-    ${KUBECTL} \
-      --kubeconfig="${CERT_DIR}/kubeconfig" \
-      --server=https://${PRIVATE_MASTER_HOST} \
-      apply -f ${ADDONS_DIR}/dns -R
+  ${KUBECTL} \
+    --kubeconfig="${CERT_DIR}/kubeconfig" \
+    --server=https://${PRIVATE_MASTER_HOST} \
+    apply -f ${ADDONS_DIR}/dns -R
 }
 #-------------------------------------------------------------------------------
 # Stop kube-dns Pods
 
 stop_kube_dns(){
-    echo "=> Stopping dns..."
+  echo "=> Stopping dns..."
 
-    ${KUBECTL} \
-      --kubeconfig="${CERT_DIR}/kubeconfig" \
-      --server=https://${PRIVATE_MASTER_HOST} \
-      delete -f ${ADDONS_DIR}/dns -R
+  ${KUBECTL} \
+    --kubeconfig="${CERT_DIR}/kubeconfig" \
+    --server=https://${PRIVATE_MASTER_HOST} \
+    delete -f ${ADDONS_DIR}/dns -R || :
 }
 #-------------------------------------------------------------------------------
 # Launch addons
 
 start_addons() {
-    echo "=> Starting addons..."
+  echo "=> Starting addons..."
 
-    # dns
-    start_kube_dns
+  # dns
+  start_kube_dns
 }
 #-------------------------------------------------------------------------------
 # Stop addons
 
 stop_addons() {
-    echo "=> Stopping addons..."
+  echo "=> Stopping addons..."
 
-    # dns
-    stop_kube_dns
+  # dns
+  stop_kube_dns
 }
 #-------------------------------------------------------------------------------
 self_hosted_install(){
@@ -435,7 +441,11 @@ self_hosted_install_cleanup() {
   rm -rf /etc/kubernetes
 
   echo "Cleanup done."
-  exit 0
+
+  local exit_requested=${1:-"true"}
+  if [ "$exit_requested" == "true" ]; then
+    exit 0
+  fi
 }
 #-------------------------------------------------------------------------------
 traditional_install() {
@@ -475,6 +485,10 @@ traditional_install_cleanup() {
   rm -rf /etc/kubernetes
 
   echo "Cleanup done."
-  exit 0
+
+  local exit_requested=${1:-"true"}
+  if [ "$exit_requested" == "true" ]; then
+    exit 0
+  fi
 }
 #-------------------------------------------------------------------------------
