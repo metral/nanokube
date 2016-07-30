@@ -255,15 +255,14 @@ get_flannel(){
 config_flannel_opts(){
   echo "Configuring flannel options..."
 
-  mkdir -p /etc/flannel
   mkdir -p /run/flannel
 
-  cat >> /etc/flannel/options.env << EOF
+  cat > /etc/default/flannel << EOF
 FLANNELD_IFACE=${MASTER_PRIVATE_IF}
 FLANNELD_ETCD_ENDPOINTS=http://${ETCD_HOST}:${ETCD_PORT}
 EOF
 
-  ln -sf /etc/flannel/options.env /run/flannel/options.env
+  ln -sf /etc/default/flannel /run/flannel/options.env
 }
 
 init_flannel(){
@@ -313,7 +312,7 @@ stop_flannel(){
   [[ -n "${FLANNEL_PID-}" ]] && FLANNEL_PIDS=$(pgrep -P ${FLANNEL_PID} ; ps -o pid= -p ${FLANNEL_PID})
   [[ -n "${FLANNEL_PIDS-}" ]] && kill_pid ${FLANNEL_PIDS}
 
-  [ -e /etc/flannel ] && rm -rf /etc/flannel
+  [ -e /etc/default/flannel ] && rm -rf /etc/default/flannel
   [ -e /run/flannel ] && rm -rf /run/flannel
   [ -d /sys/class/net/flannel.1 ] && ip link set flannel.1 down && ip link delete flannel.1
 }
