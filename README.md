@@ -40,7 +40,7 @@ nanokube has only been tested on a system with the following specs:
   * `hyperkube` binary & Docker image
   * `kubectl` CLI
 * The ability to choose a particular version of k8s to use
-* The option to install an all-in-one k8s cluster using traditional, system-hosted binaries, or the self-hosted k8s model
+* The option to install an all-in-one k8s cluster using traditional, system-hosted binaries, or the [self-hosted](https://github.com/kubernetes/kubernetes/issues/246#issuecomment-64533959) k8s model
 * Sensible defaults for all k8s Master & Node component configurations
   * These defaults are intended to provide insight into how a k8s cluster should be configured, as well as,
   what addons can & should be added
