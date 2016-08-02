@@ -234,6 +234,8 @@ start_etcd() {
 # Stop etcd
 
 stop_etcd(){
+    echo "=> Stopping etcd..."
+
     # Check if the etcd is still running
     [[ -n "${ETCD_CIDFILE-}" ]] && cleanup_docker_container $ETCD_NAME $ETCD_CIDFILE
     rm -rf "${ETCD_DIR}"
