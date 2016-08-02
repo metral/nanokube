@@ -36,7 +36,7 @@ start_apiserver() {
         --advertise-address=${PRIVATE_MASTER_HOST} \
         --admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,ResourceQuota \
         --client-ca-file=${CERT_DIR}/ca.pem \
-        --etcd-servers=http://${ETCD_HOST}:${ETCD_PORT} \
+        --etcd-servers=http://${ETCD_HOST}:${ETCD_CLIENT_PORT} \
         --bind-address=${PRIVATE_MASTER_HOST} \
         --runtime-config=extensions/v1beta1/thirdpartyresources=true \
         --service-cluster-ip-range=${SERVICE_CIDR} \

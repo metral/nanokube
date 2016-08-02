@@ -211,24 +211,24 @@ start_etcd() {
     ETCD_DIR=$(mktemp -d 2>/dev/null || mktemp -d -t test-etcd.XXXXXX)
     $DOCKER run -d \
         --restart=always \
-        -v /usr/share/ca-certificates/:/etc/ssl/certs \
+        -v $CA_CERTS:/etc/ssl/certs \
         -v $ETCD_DIR:$ETCD_DIR \
-        -p ${ETCD_PORT}:${ETCD_PORT} -p 2379:2379 -p 2380:2380 \
+        -p $ETCD_CLIENT_PORT:$ETCD_CLIENT_PORT -p $ETCD_PEER_PORT:$ETCD_PEER_PORT \
         --cidfile=$ETCD_CIDFILE \
-        --name $ETCD_NAME quay.io/coreos/etcd:$ETCD_VERSION \
+        --name $ETCD_NAME $ETCD_IMAGE \
         -name $ETCD_NAME \
-        --data-dir $ETCD_DIR \
-        -advertise-client-urls http://127.0.0.1:2379,http://127.0.0.1:${ETCD_PORT} \
-        -listen-client-urls http://0.0.0.0:2379,http://0.0.0.0:${ETCD_PORT} \
-        -initial-advertise-peer-urls http://127.0.0.1:2380 \
-        -listen-peer-urls http://0.0.0.0:2380 \
+        -data-dir $ETCD_DIR \
+        -advertise-client-urls http://$ETCD_HOST:$ETCD_CLIENT_PORT \
+        -listen-client-urls http://0.0.0.0:$ETCD_CLIENT_PORT \
+        -initial-advertise-peer-urls http://$ETCD_HOST:$ETCD_PEER_PORT \
+        -listen-peer-urls http://0.0.0.0:$ETCD_PEER_PORT \
         -initial-cluster-token $ETCD_TOKEN \
-        -initial-cluster $ETCD_NAME=http://127.0.0.1:2380 \
+        -initial-cluster $ETCD_NAME=http://$ETCD_HOST:$ETCD_PEER_PORT \
         -initial-cluster-state new
 
     echo "==> Waiting for etcd to come up..."
-    wait_for_url "http://${ETCD_HOST}:${ETCD_PORT}/v2/machines" "etcd: " 0.25 80
-    curl -fs -X PUT "http://${ETCD_HOST}:${ETCD_PORT}/v2/keys/_test"
+    wait_for_url "http://$ETCD_HOST:$ETCD_CLIENT_PORT/v2/machines" "etcd: " 0.25 80
+    curl -fs -X PUT "http://$ETCD_HOST:$ETCD_CLIENT_PORT/v2/keys/_test"
 }
 #-------------------------------------------------------------------------------
 # Stop etcd
@@ -259,7 +259,7 @@ config_flannel_opts(){
 
   cat > /etc/default/flannel << EOF
 FLANNELD_IFACE=${MASTER_PRIVATE_IF}
-FLANNELD_ETCD_ENDPOINTS=http://${ETCD_HOST}:${ETCD_PORT}
+FLANNELD_ETCD_ENDPOINTS=http://${ETCD_HOST}:${ETCD_CLIENT_PORT}
 EOF
 
   ln -sf /etc/default/flannel /run/flannel/options.env
@@ -270,7 +270,7 @@ init_flannel(){
   while true
   do
     # TODO - line should be: IFS=',' read -ra ES <<< "<all etcd endpoints>"
-    IFS=',' read -ra ES <<< "${ETCD_HOST}:${ETCD_PORT}"
+    IFS=',' read -ra ES <<< "${ETCD_HOST}:${ETCD_CLIENT_PORT}"
     for etcd_host in "${ES[@]}"; do
       echo "Trying: $etcd_host"
       if [ -n "$(curl --silent "$etcd_host/v2/machines")" ]; then
@@ -337,7 +337,7 @@ EOF
       service docker restart
 
       echo "==> Waiting for etcd to come up..."
-      wait_for_url "http://${ETCD_HOST}:${ETCD_PORT}/v2/machines" "etcd: " 0.25 80
+      wait_for_url "http://${ETCD_HOST}:${ETCD_CLIENT_PORT}/v2/machines" "etcd: " 0.25 80
 
       return 0
     fi

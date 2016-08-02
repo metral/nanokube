@@ -23,9 +23,11 @@ KUBECTL="/usr/bin/kubectl"
 
 # etcd settings
 ETCD_NAME="etcd"
-ETCD_HOST="localhost"
-ETCD_PORT="4001"
 ETCD_VERSION="v2.3.7"
+ETCD_IMAGE="quay.io/coreos/etcd:${ETCD_VERSION}"
+ETCD_HOST="127.0.0.1"
+ETCD_CLIENT_PORT="2379"
+ETCD_PEER_PORT="2380"
 
 # flannel settings
 FLANNEL="/usr/bin/flanneld"
@@ -52,3 +54,6 @@ DNS_DOMAIN="cluster.local"          # DNS Domain for k8s cluster
 CERT_DIR="/etc/kubernetes/ssl"
 TEMPLATES_DIR="./templates"
 ADDONS_DIR="./addons"
+
+# Misc
+CA_CERTS="/usr/share/ca-certificates"
