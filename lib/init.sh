@@ -75,7 +75,7 @@ render_addons() {
 generate_certs() {
     echo "=> Generating certs..."
     /usr/sbin/groupadd -f -r kube-cert > /dev/null 2>&1
-    ./make-ca-cert.sh IP:$PRIVATE_MASTER_LB_HOST,IP:$PRIVATE_MASTER_HOST,IP:$APISERVER_SERVICE_IP,IP:127.0.0.1,DNS:localhost,DNS:kubernetes,DNS:kubernetes.default,DNS:kubernetes.default.svc
+    ./make-ca-cert.sh IP:$PRIVATE_MASTER_HOST,IP:$APISERVER_SERVICE_IP,IP:127.0.0.1,DNS:localhost,DNS:kubernetes,DNS:kubernetes.default,DNS:kubernetes.default.svc
 }
 #-------------------------------------------------------------------------------
 kill_pid(){

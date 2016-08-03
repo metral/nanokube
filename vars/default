@@ -37,7 +37,6 @@ FLANNEL_VERSION="0.5.5"
 # Master settings
 MASTER_PRIVATE_IF=eth1
 PRIVATE_MASTER_HOST="$(ip -4 a s $MASTER_PRIVATE_IF | grep inet | awk '{print $2}' | cut -f1 -d"/")"
-PRIVATE_MASTER_LB_HOST="${PRIVATE_MASTER_HOST}"   # Should be LB virtual IP for cert SAN & kubeconfig's
 
 # Node settings
 NODE_PRIVATE_IF=eth1
