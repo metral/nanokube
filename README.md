@@ -1,11 +1,12 @@
 # nanokube
 
-nanokube create's an all-in-one k8s cluster for usage during app development & testing.
+nanokube is a simple tool to quickly bring up a local, all-in-one Kubernetes cluster. It is used during app development, testing or experimentation with the k8s project.
 
-The cluster contains a single etcd instance, along with the respective k8s Master & Node components per the installation model.
-
-nanokube intends to provide the user with a local version of a k8s cluster
-configured to resemble a production-grade cluster.
+### Features
+* It can create the cluster locally on any bare-metal machine, VM, or even containers via k8s Pods.
+* Docker is the main requirement of the machine.
+* The cluster contains an etcd and flannel instance, along with the respective k8s Master & Node components required to stand up a cluster.
+* Includes sensible default configurations similar to those one would expect to find in a production-grade cluster.
 
 **Kudos:** to the [k8s.io](http://k8s.io) community and [CoreOS](http://coreos.com), as this
 project draws from k8s' [local-up-cluster.sh](https://github.com/kubernetes/kubernetes/blob/master/hack/local-up-cluster.sh) and [coreos-kubernetes](https://github.com/coreos/coreos-kubernetes)
