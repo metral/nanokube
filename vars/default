@@ -45,7 +45,7 @@ PRIVATE_NODE_HOST="$(ip -4 a s $NODE_PRIVATE_IF | grep inet | awk '{print $2}' |
 # Cluster Network settings
 SERVICE_CIDR="10.32.0.0/24"         # CIDR for all k8s Services
 APISERVER_SERVICE_IP="10.32.0.1"    # Expected k8s Service IP of kube-apiserver // used as SAN in TLS cert generation
-DNS_SERVICE_IP="10.32.0.10"         # Expected k8s Service IP of kube-dns // used as SAN in TLS cert generation
+DNS_SERVICE_IP="10.32.0.10"         # Expected k8s Service IP of kube-dns
 PODS_CIDR="10.33.0.0/16"            # CIDR for all k8s Pods
 DNS_DOMAIN="cluster.local"          # DNS Domain for k8s cluster
 
