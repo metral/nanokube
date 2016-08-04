@@ -16,7 +16,7 @@ cat > ${LOCAL_MANIFESTS_DIR}/kube-proxy.yaml << EOF
          - proxy
          - --conntrack-max=0
          - --kubeconfig=${CERT_DIR}/kubeconfig
-         - --master=https://${PRIVATE_MASTER_HOST}
+         - --master=${MASTER_HOST}
        securityContext:
          privileged: true
        volumeMounts:

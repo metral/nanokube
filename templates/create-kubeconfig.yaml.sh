@@ -7,7 +7,7 @@ clusters:
 - name: nanokube-cluster
   cluster:
     certificate-authority: ${CERT_DIR}/ca.pem
-    server: https://${PRIVATE_MASTER_HOST}
+    server: ${MASTER_HOST}
 contexts:
 - context:
     cluster: nanokube-cluster

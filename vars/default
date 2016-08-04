@@ -24,23 +24,25 @@ KUBECTL="/usr/bin/kubectl"
 # etcd settings
 ETCD_NAME="etcd"
 ETCD_VERSION="v2.3.7"
-ETCD_IMAGE="quay.io/coreos/etcd:${ETCD_VERSION}"
-ETCD_HOST="127.0.0.1"
 ETCD_CLIENT_PORT="2379"
 ETCD_PEER_PORT="2380"
+ETCD_IMAGE="quay.io/coreos/etcd:${ETCD_VERSION}"
+ETCD_SERVERS="http://127.0.0.1:$ETCD_CLIENT_PORT"        # Server endpoints for etcd clients
+ETCD_PEER_SERVERS="http://127.0.0.1:$ETCD_PEER_PORT"     # Server endpoints for etcd peers
 
 # flannel settings
 FLANNEL="/usr/bin/flanneld"
 FLANNEL_ENV="/run/flannel/subnet.env"
 FLANNEL_VERSION="0.5.5"
 
-# Master settings
-MASTER_PRIVATE_IF=eth1
-PRIVATE_MASTER_HOST="$(ip -4 a s $MASTER_PRIVATE_IF | grep inet | awk '{print $2}' | cut -f1 -d"/")"
+# Master network config
+PRIVATE_MASTER_IF=eth1
+PRIVATE_MASTER_HOST="$(ip -4 a s $PRIVATE_MASTER_IF | grep inet | awk '{print $2}' | cut -f1 -d"/")"
 
-# Node settings
-NODE_PRIVATE_IF=eth1
-PRIVATE_NODE_HOST="$(ip -4 a s $NODE_PRIVATE_IF | grep inet | awk '{print $2}' | cut -f1 -d"/")"
+# Node network config
+# Should be cluster-accessible DNS name, IP, or LB address (if HA) of k8s
+# Master(s), but using PRIVATE_MASTER_HOST here since master & node are co-located
+MASTER_HOST="https://$PRIVATE_MASTER_HOST"
 
 # Cluster Network settings
 SERVICE_CIDR="10.32.0.0/24"         # CIDR for all k8s Services
@@ -49,10 +51,8 @@ DNS_SERVICE_IP="10.32.0.10"         # Expected k8s Service IP of kube-dns
 PODS_CIDR="10.33.0.0/16"            # CIDR for all k8s Pods
 DNS_DOMAIN="cluster.local"          # DNS Domain for k8s cluster
 
-# k8s Component Paths
-CERT_DIR="/etc/kubernetes/ssl"
+# Paths
 TEMPLATES_DIR="./templates"
 ADDONS_DIR="./addons"
-
-# Misc
+CERT_DIR="/etc/kubernetes/ssl"
 CA_CERTS="/usr/share/ca-certificates"

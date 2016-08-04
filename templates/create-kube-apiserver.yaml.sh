@@ -17,7 +17,7 @@ cat > ${LOCAL_MANIFESTS_DIR}/kube-apiserver.yaml << EOF
          - --advertise-address=${PRIVATE_MASTER_HOST}
          - --admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,ResourceQuota
          - --client-ca-file=${CERT_DIR}/ca.pem
-         - --etcd-servers=http://${ETCD_HOST}:${ETCD_CLIENT_PORT}
+         - --etcd-servers=$ETCD_SERVERS
          - --bind-address=${PRIVATE_MASTER_HOST}
          - --runtime-config=extensions/v1beta1/thirdpartyresources=true
          - --service-cluster-ip-range=${SERVICE_CIDR}
