@@ -80,8 +80,8 @@ Kubernetes components that comprise a cluster.
       * etcd
       * kubelet (requires privileged mode)
         * The `kubelet` here doubles as the instantiator of both the Self-Hosted
-  k8s Pods, and user Pods
-  * Self-Hosted k8s Pods (running atop the `kubelet`)
+  static k8s Pods, and user Pods
+  * Self-Hosted k8s Static Pods (running atop the `kubelet`)
       * kube-apiserver
       * kube-controller-manager
       * kube-scheduler
