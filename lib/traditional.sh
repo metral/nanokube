@@ -48,7 +48,7 @@ start_apiserver() {
     # Wait for kube-apiserver to come up before launching the rest of the
     # components.
     echo "=> Waiting for apiserver to come up..."
-    wait_for_apiserver "${MASTER_HOST}" "${CERT_DIR}/kubeconfig" "apiserver: " 1 20 || exit 1
+    wait_for_apiserver "${MASTER_HOST}" "${CERT_DIR}/admin-kubeconfig" "apiserver: " 1 20 || exit 1
 }
 #-------------------------------------------------------------------------------
 # Stop kube-apiserver
@@ -120,7 +120,7 @@ start_kubelet() {
         --cluster-dns=${DNS_SERVICE_IP} \
         --cluster-domain=${DNS_DOMAIN} \
         --hostname-override=${HOSTNAME_OVERRIDE} \
-        --kubeconfig=${CERT_DIR}/kubeconfig > ${NODE_KUBELET_LOG} 2>&1 &
+        --kubeconfig=${CERT_DIR}/node-kubeconfig > ${NODE_KUBELET_LOG} 2>&1 &
     NODE_KUBELET_PID=$!
 }
 #-------------------------------------------------------------------------------
@@ -142,7 +142,7 @@ start_proxy() {
     NODE_KUBE_PROXY_LOG="/tmp/node-kube-proxy.log"
     ${HYPERKUBE} proxy \
         --conntrack-max=0 \
-        --kubeconfig=${CERT_DIR}/kubeconfig \
+        --kubeconfig=${CERT_DIR}/node-kubeconfig \
         --master=${MASTER_HOST} > ${NODE_KUBE_PROXY_LOG} 2>&1 &
     NODE_KUBE_PROXY_PID=$!
 }
@@ -205,11 +205,11 @@ check_nodes(){
     echo "=> k8s nodes:"
     while true;
     do
-        kubelet=$(${KUBECTL} --kubeconfig=${CERT_DIR}/kubeconfig --server=${MASTER_HOST} get no | grep "NotReady" | wc -l)
+        kubelet=$(${KUBECTL} --kubeconfig=${CERT_DIR}/admin-kubeconfig --server=${MASTER_HOST} get no | grep "NotReady" | wc -l)
         proxy=$(ps aux | grep "hyperkube proxy" | grep -v grep)
         if [[ $kubelet == 0 ]] && [ -n "$proxy" ]; then
             sleep 7 # TODO fix this hack
-            echo "`${KUBECTL} --kubeconfig=${CERT_DIR}/kubeconfig --server=${MASTER_HOST} get no`"
+            echo "`${KUBECTL} --kubeconfig=${CERT_DIR}/admin-kubeconfig --server=${MASTER_HOST} get no`"
             return 0
         fi
         sleep 1;

@@ -1,6 +1,8 @@
 #!/bin/bash
 
-cat > ${CERT_DIR}/kubeconfig << EOF
+k8s_user=$1
+
+cat > ${CERT_DIR}/$k8s_user-kubeconfig << EOF
 apiVersion: v1
 kind: Config
 clusters:
@@ -11,13 +13,13 @@ clusters:
 contexts:
 - context:
     cluster: nanokube-cluster
-    user: nanokube-admin
+    user: $k8s_user
     namespace: default
   name: nanokube-context
 users:
-- name: nanokube-admin
+- name: $k8s_user
   user:
-    client-certificate: ${CERT_DIR}/kubecfg.pem
-    client-key: ${CERT_DIR}/kubecfg-key.pem
+    client-certificate: ${CERT_DIR}/${k8s_user}.pem
+    client-key: ${CERT_DIR}/${k8s_user}-key.pem
 current-context: nanokube-context
 EOF
