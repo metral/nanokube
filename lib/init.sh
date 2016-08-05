@@ -57,7 +57,8 @@ wait_for_apiserver() {
 # need to alter make-ca-cert.sh to generate 2 different copies
 render_kubeconfig(){
     echo "=> Rendering kubectl kubeconfig file..."
-    $TEMPLATES_DIR/create-kubeconfig.yaml.sh
+    $TEMPLATES_DIR/create-kubeconfig.yaml.sh "node"
+    $TEMPLATES_DIR/create-kubeconfig.yaml.sh "admin"
 }
 #-------------------------------------------------------------------------------
 # Generate k8s component manifests from their respective templates
@@ -108,7 +109,7 @@ cleanup_k8s(){
   echo "=> Cleaning k8s resources..."
 
   # Check if the k8s resources still exist & delete
-  ${KUBECTL} --kubeconfig=${CERT_DIR}/kubeconfig --server=${MASTER_HOST} delete --namespace=default deployments,rc,rs,pods,svc,ing,secrets,configmaps --all --grace-period=0
+  ${KUBECTL} --kubeconfig=${CERT_DIR}/admin-kubeconfig --server=${MASTER_HOST} delete --namespace=default deployments,rc,rs,pods,svc,ing,secrets,configmaps --all --grace-period=0
 }
 #-------------------------------------------------------------------------------
 # check k8s component statuses
@@ -116,9 +117,9 @@ check_component_statuses(){
     echo "=> k8s component statuses:"
     while true;
     do
-        out=$(${KUBECTL} --kubeconfig=${CERT_DIR}/kubeconfig --server=${MASTER_HOST} get cs | grep "Unhealthy" | wc -l)
+        out=$(${KUBECTL} --kubeconfig=${CERT_DIR}/admin-kubeconfig --server=${MASTER_HOST} get cs | grep "Unhealthy" | wc -l)
         if [[ $out == 0 ]]; then
-            echo "`${KUBECTL} --kubeconfig=${CERT_DIR}/kubeconfig --server=${MASTER_HOST} get cs`"
+            echo "`${KUBECTL} --kubeconfig=${CERT_DIR}/admin-kubeconfig --server=${MASTER_HOST} get cs`"
             return 0
         fi
         sleep 1;
@@ -363,7 +364,7 @@ start_kube_dns(){
   echo "=> Starting dns..."
 
   ${KUBECTL} \
-    --kubeconfig="${CERT_DIR}/kubeconfig" \
+    --kubeconfig="${CERT_DIR}/admin-kubeconfig" \
     --server=${MASTER_HOST} \
     apply -f ${ADDONS_DIR}/dns -R
 }
@@ -374,7 +375,7 @@ stop_kube_dns(){
   echo "=> Stopping dns..."
 
   ${KUBECTL} \
-    --kubeconfig="${CERT_DIR}/kubeconfig" \
+    --kubeconfig="${CERT_DIR}/admin-kubeconfig" \
     --server=${MASTER_HOST} \
     delete -f ${ADDONS_DIR}/dns -R || :
 }

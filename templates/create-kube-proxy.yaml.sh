@@ -15,7 +15,7 @@ cat > ${LOCAL_MANIFESTS_DIR}/kube-proxy.yaml << EOF
          - /hyperkube
          - proxy
          - --conntrack-max=0
-         - --kubeconfig=${CERT_DIR}/kubeconfig
+         - --kubeconfig=${CERT_DIR}/node-kubeconfig
          - --master=${MASTER_HOST}
        securityContext:
          privileged: true

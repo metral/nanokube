@@ -62,14 +62,18 @@ if [ $use_cn = "true" ]; then
     cp -p pki/issued/$cert_ip.crt "${cert_dir}/apiserver.pem" > /dev/null 2>&1
     cp -p pki/private/$cert_ip.key "${cert_dir}/apiserver-key.pem" > /dev/null 2>&1
 else
-    ./easyrsa --subject-alt-name="${sans}" build-server-full kubernetes-master nopass > /dev/null 2>&1
-    cp -p pki/issued/kubernetes-master.crt "${cert_dir}/apiserver.pem" > /dev/null 2>&1
-    cp -p pki/private/kubernetes-master.key "${cert_dir}/apiserver-key.pem" > /dev/null 2>&1
+    ./easyrsa --subject-alt-name="${sans}" build-server-full k8s-master nopass > /dev/null 2>&1
+    cp -p pki/issued/k8s-master.crt "${cert_dir}/apiserver.pem" > /dev/null 2>&1
+    cp -p pki/private/k8s-master.key "${cert_dir}/apiserver-key.pem" > /dev/null 2>&1
 fi
-./easyrsa build-client-full kubecfg nopass > /dev/null 2>&1
+./easyrsa build-client-full k8s-node nopass > /dev/null 2>&1
 cp -p pki/ca.crt "${cert_dir}/ca.pem"
-cp -p pki/issued/kubecfg.crt "${cert_dir}/kubecfg.pem"
-cp -p pki/private/kubecfg.key "${cert_dir}/kubecfg-key.pem"
+cp -p pki/issued/k8s-node.crt "${cert_dir}/node.pem"
+cp -p pki/private/k8s-node.key "${cert_dir}/node-key.pem"
+
+./easyrsa build-client-full nanokube-admin nopass > /dev/null 2>&1
+cp -p pki/issued/nanokube-admin.crt "${cert_dir}/admin.pem"
+cp -p pki/private/nanokube-admin.key "${cert_dir}/admin-key.pem"
 # Make apiserver.pems accessible to apiserver.
 chgrp $cert_group "${cert_dir}/apiserver-key.pem" "${cert_dir}/apiserver.pem" "${cert_dir}/ca.pem"
 chmod 660 "${cert_dir}/apiserver-key.pem" "${cert_dir}/apiserver.pem" "${cert_dir}/ca.pem"
