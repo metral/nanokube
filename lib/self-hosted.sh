@@ -47,7 +47,7 @@ start_apiserver() {
     # Wait for kube-apiserver to come up before launching the rest of the
     # components.
     echo "=> Waiting for apiserver to come up..."
-    wait_for_apiserver "https://${PRIVATE_MASTER_HOST}" "${CERT_DIR}/kubeconfig" "apiserver: " 1 20 || exit 1
+    wait_for_apiserver "${MASTER_HOST}" "${CERT_DIR}/kubeconfig" "apiserver: " 1 20 || exit 1
 }
 #-------------------------------------------------------------------------------
 # Stop kube-apisever Pod
@@ -192,10 +192,10 @@ check_nodes(){
     echo "=> k8s nodes:"
     while true;
     do
-        kubelet=$(${KUBECTL} --kubeconfig=${CERT_DIR}/kubeconfig --server=https://${PRIVATE_MASTER_HOST} get no | grep "NotReady" | wc -l)
+        kubelet=$(${KUBECTL} --kubeconfig=${CERT_DIR}/kubeconfig --server=${MASTER_HOST} get no | grep "NotReady" | wc -l)
         proxy_pod_name=$(docker ps --format '{{.Names}}' | grep "k8s_kube-proxy" || :)
         if [[ $kubelet == 0 ]] && [ -n "$proxy_pod_name" ]; then
-            echo "`${KUBECTL} --kubeconfig=${CERT_DIR}/kubeconfig --server=https://${PRIVATE_MASTER_HOST} get no`"
+            echo "`${KUBECTL} --kubeconfig=${CERT_DIR}/kubeconfig --server=${MASTER_HOST} get no`"
             return 0
         fi
         sleep 1;

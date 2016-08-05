@@ -36,7 +36,7 @@ start_apiserver() {
         --advertise-address=${PRIVATE_MASTER_HOST} \
         --admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,ResourceQuota \
         --client-ca-file=${CERT_DIR}/ca.pem \
-        --etcd-servers=http://${ETCD_HOST}:${ETCD_CLIENT_PORT} \
+        --etcd-servers=$ETCD_SERVERS \
         --bind-address=${PRIVATE_MASTER_HOST} \
         --runtime-config=extensions/v1beta1/thirdpartyresources=true \
         --service-cluster-ip-range=${SERVICE_CIDR} \
@@ -48,7 +48,7 @@ start_apiserver() {
     # Wait for kube-apiserver to come up before launching the rest of the
     # components.
     echo "=> Waiting for apiserver to come up..."
-    wait_for_apiserver "https://${PRIVATE_MASTER_HOST}" "${CERT_DIR}/kubeconfig" "apiserver: " 1 20 || exit 1
+    wait_for_apiserver "${MASTER_HOST}" "${CERT_DIR}/kubeconfig" "apiserver: " 1 20 || exit 1
 }
 #-------------------------------------------------------------------------------
 # Stop kube-apiserver
@@ -116,7 +116,7 @@ start_kubelet() {
     HOSTNAME_OVERRIDE=${PRIVATE_NODE_HOST:-127.0.0.1}
     NODE_KUBELET_LOG="/tmp/node-kubelet.log"
     ${HYPERKUBE} kubelet \
-        --api-servers=https://${PRIVATE_MASTER_HOST} \
+        --api-servers=${MASTER_HOST} \
         --cluster-dns=${DNS_SERVICE_IP} \
         --cluster-domain=${DNS_DOMAIN} \
         --hostname-override=${HOSTNAME_OVERRIDE} \
@@ -143,7 +143,7 @@ start_proxy() {
     ${HYPERKUBE} proxy \
         --conntrack-max=0 \
         --kubeconfig=${CERT_DIR}/kubeconfig \
-        --master=https://${PRIVATE_MASTER_HOST} > ${NODE_KUBE_PROXY_LOG} 2>&1 &
+        --master=${MASTER_HOST} > ${NODE_KUBE_PROXY_LOG} 2>&1 &
     NODE_KUBE_PROXY_PID=$!
 }
 #-------------------------------------------------------------------------------
@@ -205,11 +205,11 @@ check_nodes(){
     echo "=> k8s nodes:"
     while true;
     do
-        kubelet=$(${KUBECTL} --kubeconfig=${CERT_DIR}/kubeconfig --server=https://${PRIVATE_MASTER_HOST} get no | grep "NotReady" | wc -l)
+        kubelet=$(${KUBECTL} --kubeconfig=${CERT_DIR}/kubeconfig --server=${MASTER_HOST} get no | grep "NotReady" | wc -l)
         proxy=$(ps aux | grep "hyperkube proxy" | grep -v grep)
         if [[ $kubelet == 0 ]] && [ -n "$proxy" ]; then
             sleep 7 # TODO fix this hack
-            echo "`${KUBECTL} --kubeconfig=${CERT_DIR}/kubeconfig --server=https://${PRIVATE_MASTER_HOST} get no`"
+            echo "`${KUBECTL} --kubeconfig=${CERT_DIR}/kubeconfig --server=${MASTER_HOST} get no`"
             return 0
         fi
         sleep 1;

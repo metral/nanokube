@@ -108,7 +108,7 @@ cleanup_k8s(){
   echo "=> Cleaning k8s resources..."
 
   # Check if the k8s resources still exist & delete
-  ${KUBECTL} --kubeconfig=${CERT_DIR}/kubeconfig --server=https://${PRIVATE_MASTER_HOST} delete --namespace=default deployments,rc,rs,pods,svc,ing,secrets,configmaps --all --grace-period=0
+  ${KUBECTL} --kubeconfig=${CERT_DIR}/kubeconfig --server=${MASTER_HOST} delete --namespace=default deployments,rc,rs,pods,svc,ing,secrets,configmaps --all --grace-period=0
 }
 #-------------------------------------------------------------------------------
 # check k8s component statuses
@@ -116,9 +116,9 @@ check_component_statuses(){
     echo "=> k8s component statuses:"
     while true;
     do
-        out=$(${KUBECTL} --kubeconfig=${CERT_DIR}/kubeconfig --server=https://${PRIVATE_MASTER_HOST} get cs | grep "Unhealthy" | wc -l)
+        out=$(${KUBECTL} --kubeconfig=${CERT_DIR}/kubeconfig --server=${MASTER_HOST} get cs | grep "Unhealthy" | wc -l)
         if [[ $out == 0 ]]; then
-            echo "`${KUBECTL} --kubeconfig=${CERT_DIR}/kubeconfig --server=https://${PRIVATE_MASTER_HOST} get cs`"
+            echo "`${KUBECTL} --kubeconfig=${CERT_DIR}/kubeconfig --server=${MASTER_HOST} get cs`"
             return 0
         fi
         sleep 1;
@@ -218,17 +218,17 @@ start_etcd() {
         --name $ETCD_NAME $ETCD_IMAGE \
         -name $ETCD_NAME \
         -data-dir $ETCD_DIR \
-        -advertise-client-urls http://$ETCD_HOST:$ETCD_CLIENT_PORT \
+        -advertise-client-urls $ETCD_SERVERS \
         -listen-client-urls http://0.0.0.0:$ETCD_CLIENT_PORT \
-        -initial-advertise-peer-urls http://$ETCD_HOST:$ETCD_PEER_PORT \
+        -initial-advertise-peer-urls $ETCD_PEER_SERVERS \
         -listen-peer-urls http://0.0.0.0:$ETCD_PEER_PORT \
         -initial-cluster-token $ETCD_TOKEN \
-        -initial-cluster $ETCD_NAME=http://$ETCD_HOST:$ETCD_PEER_PORT \
+        -initial-cluster $ETCD_NAME=$ETCD_PEER_SERVERS \
         -initial-cluster-state new
 
     echo "==> Waiting for etcd to come up..."
-    wait_for_url "http://$ETCD_HOST:$ETCD_CLIENT_PORT/v2/machines" "etcd: " 0.25 80
-    curl -fs -X PUT "http://$ETCD_HOST:$ETCD_CLIENT_PORT/v2/keys/_test"
+    wait_for_url "$ETCD_SERVERS/v2/machines" "etcd: " 0.25 80
+    curl -fs -X PUT "$ETCD_SERVERS/v2/keys/_test"
 }
 #-------------------------------------------------------------------------------
 # Stop etcd
@@ -261,7 +261,7 @@ config_flannel_opts(){
 
   cat > /etc/default/flannel << EOF
 FLANNELD_IFACE=${MASTER_PRIVATE_IF}
-FLANNELD_ETCD_ENDPOINTS=http://${ETCD_HOST}:${ETCD_CLIENT_PORT}
+FLANNELD_ETCD_ENDPOINTS=$ETCD_SERVERS
 EOF
 
   ln -sf /etc/default/flannel /run/flannel/options.env
@@ -271,21 +271,20 @@ init_flannel(){
   echo "Waiting for etcd..."
   while true
   do
-    # TODO - line should be: IFS=',' read -ra ES <<< "<all etcd endpoints>"
-    IFS=',' read -ra ES <<< "${ETCD_HOST}:${ETCD_CLIENT_PORT}"
-    for etcd_host in "${ES[@]}"; do
-      echo "Trying: $etcd_host"
-      if [ -n "$(curl --silent "$etcd_host/v2/machines")" ]; then
-        local ACTIVE_ETCD_HOST=$etcd_host
+    IFS=',' read -ra ES <<< "$ETCD_SERVERS"
+    for etcd_server in "${ES[@]}"; do
+      echo "Trying: $etcd_server"
+      if [ -n "$(curl --silent "$etcd_server/v2/machines")" ]; then
+        local ACTIVE_ETCD_SERVER=$etcd_server
         break
       fi
       sleep 1
     done
-    if [ -n "$ACTIVE_ETCD_HOST" ]; then
+    if [ -n "$ACTIVE_ETCD_SERVER" ]; then
       break
     fi
   done
-  RES=$(curl --silent -X PUT -d "value={\"Network\":\"$PODS_CIDR\",\"Backend\":{\"Type\":\"vxlan\"}}" "$ACTIVE_ETCD_HOST/v2/keys/coreos.com/network/config?prevExist=false")
+  RES=$(curl --silent -X PUT -d "value={\"Network\":\"$PODS_CIDR\",\"Backend\":{\"Type\":\"vxlan\"}}" "$ACTIVE_ETCD_SERVER/v2/keys/coreos.com/network/config?prevExist=false")
   if [ -z "$(echo $RES | grep '"action":"create"')" ] && [ -z "$(echo $RES | grep 'Key already exists')" ]; then
     echo "Unexpected error configuring flannel pod network: $RES"
   fi
@@ -339,7 +338,7 @@ EOF
       service docker restart
 
       echo "==> Waiting for etcd to come up..."
-      wait_for_url "http://${ETCD_HOST}:${ETCD_CLIENT_PORT}/v2/machines" "etcd: " 0.25 80
+      wait_for_url "$ETCD_SERVERS/v2/machines" "etcd: " 0.25 80
 
       return 0
     fi
@@ -365,7 +364,7 @@ start_kube_dns(){
 
   ${KUBECTL} \
     --kubeconfig="${CERT_DIR}/kubeconfig" \
-    --server=https://${PRIVATE_MASTER_HOST} \
+    --server=${MASTER_HOST} \
     apply -f ${ADDONS_DIR}/dns -R
 }
 #-------------------------------------------------------------------------------
@@ -376,7 +375,7 @@ stop_kube_dns(){
 
   ${KUBECTL} \
     --kubeconfig="${CERT_DIR}/kubeconfig" \
-    --server=https://${PRIVATE_MASTER_HOST} \
+    --server=${MASTER_HOST} \
     delete -f ${ADDONS_DIR}/dns -R || :
 }
 #-------------------------------------------------------------------------------
