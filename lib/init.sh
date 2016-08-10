@@ -261,7 +261,7 @@ config_flannel_opts(){
   mkdir -p /run/flannel
 
   cat > /etc/default/flannel << EOF
-FLANNELD_IFACE=${MASTER_PRIVATE_IF}
+FLANNELD_IFACE=${PRIVATE_MASTER_IF}
 FLANNELD_ETCD_ENDPOINTS=$ETCD_SERVERS
 EOF
 
@@ -300,8 +300,10 @@ setup_flannel(){
 start_flannel(){
   echo "=> Starting flannel..."
 
+  source /run/flannel/options.env
+
   FLANNEL_LOG="/tmp/flannel.log"
-  ${FLANNEL} > ${FLANNEL_LOG} 2>&1 &
+  ${FLANNEL} -iface=$FLANNELD_IFACE -etcd-endpoints=$FLANNELD_ETCD_ENDPOINTS > ${FLANNEL_LOG} 2>&1 &
   FLANNEL_PID=$!
 }
 #-------------------------------------------------------------------------------
