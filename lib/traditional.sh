@@ -142,6 +142,8 @@ start_proxy() {
     NODE_KUBE_PROXY_LOG="/tmp/node-kube-proxy.log"
     ${HYPERKUBE} proxy \
         --conntrack-max=0 \
+        --conntrack-max-per-core=0 \
+        --conntrack-tcp-timeout-established=0 \
         --kubeconfig=${CERT_DIR}/node-kubeconfig \
         --master=${MASTER_HOST} > ${NODE_KUBE_PROXY_LOG} 2>&1 &
     NODE_KUBE_PROXY_PID=$!
