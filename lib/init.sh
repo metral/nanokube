@@ -245,10 +245,11 @@ stop_etcd(){
 #-------------------------------------------------------------------------------
 get_flannel(){
   # Pull down flannel binary
-  wget --quiet https://github.com/coreos/flannel/releases/download/v${FLANNEL_VERSION}/flannel-${FLANNEL_VERSION}-linux-amd64.tar.gz -O /tmp/flannel.tar.gz
+  rm -rf /tmp/flannel*
+  wget --quiet https://github.com/coreos/flannel/releases/download/v${FLANNEL_VERSION}/flannel-v${FLANNEL_VERSION}-linux-amd64.tar.gz -O /tmp/flannel.tar.gz
   pushd /tmp > /dev/null
   tar xzf /tmp/flannel.tar.gz
-  cp -r flannel*/flanneld ${FLANNEL}
+  cp -f flanneld ${FLANNEL}
   popd > /dev/null
   chmod +x ${FLANNEL}
 }
@@ -261,7 +262,7 @@ config_flannel_opts(){
   mkdir -p /run/flannel
 
   cat > /etc/default/flannel << EOF
-FLANNELD_IFACE=${PRIVATE_MASTER_IF}
+FLANNELD_IFACE=$PRIVATE_MASTER_IF
 FLANNELD_ETCD_ENDPOINTS=$ETCD_SERVERS
 EOF
 
@@ -303,7 +304,7 @@ start_flannel(){
   source /run/flannel/options.env
 
   FLANNEL_LOG="/tmp/flannel.log"
-  ${FLANNEL} -iface=$FLANNELD_IFACE -etcd-endpoints=$FLANNELD_ETCD_ENDPOINTS > ${FLANNEL_LOG} 2>&1 &
+  ${FLANNEL} > ${FLANNEL_LOG} 2>&1 &
   FLANNEL_PID=$!
 }
 #-------------------------------------------------------------------------------

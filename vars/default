@@ -33,7 +33,7 @@ ETCD_PEER_SERVERS="http://127.0.0.1:$ETCD_PEER_PORT"     # Server endpoints for 
 # flannel settings
 FLANNEL="/usr/bin/flanneld"
 FLANNEL_ENV="/run/flannel/subnet.env"
-FLANNEL_VERSION="0.5.5"
+FLANNEL_VERSION="0.6.1"
 
 # Master network config
 PRIVATE_MASTER_IF=eth1
