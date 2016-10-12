@@ -3,6 +3,9 @@
 # cleanup k8s resources
 kubectl delete --namespace=default deployments,rc,rs,pods,svc,ing,secrets,configmaps --all --grace-period=0
 
+# misc
+rm -rf /tmp/*.cid
+
 # reset Docker
 cp /tmp/docker.bak /etc/default/docker
 service docker restart

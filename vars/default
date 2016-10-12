@@ -3,7 +3,7 @@
 # Global vars
 
 # Kubernetes version to install
-KUBERNETES_VERSION="v1.3.6"
+KUBERNETES_VERSION="v1.4.1"
 HYPERKUBE_VERSION=${KUBERNETES_VERSION}
 
 # Docker
