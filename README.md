@@ -92,11 +92,11 @@ Kubernetes components that comprise a cluster.
 **0. Clone nanokube**
 
   ```bash
-  // Install basic dependencies
-  ./install_deps.sh
-
   git clone https://github.com/metral/nanokube
   cd nanokube
+
+  // Install basic dependencies
+  ./install_deps.sh
   ```
 
 **1. Install Dependencies**
