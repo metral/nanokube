@@ -10,7 +10,7 @@ cat > ${LOCAL_MANIFESTS_DIR}/kube-proxy.yaml << EOF
    hostNetwork: true
    containers:
      - name: ${PROXY_POD_NAME}
-       image: ${HYPERKUBE_IMAGE_REPO}:${HYPERKUBE_VERSION}
+       image: ${HYPERKUBE_IMAGE_REPO}:${KUBERNETES_VERSION}
        command:
          - /hyperkube
          - proxy

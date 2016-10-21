@@ -29,7 +29,7 @@ pre_setup() {
     # Pull down Docker images
     # Hyperkube: each Pod will use this image to instantiate a k8s component in a
     # Pod depending on the role, Master or Node: apiserver, controller-manager, scheduler or kube-proxy
-    $DOCKER pull $HYPERKUBE_IMAGE_REPO:$HYPERKUBE_VERSION
+    $DOCKER pull $HYPERKUBE_IMAGE_REPO:$KUBERNETES_VERSION
 
     # Pull down kubectl binary
     curl -s -o ${KUBECTL} ${KUBECTL_BIN_SOURCE}
@@ -107,7 +107,7 @@ start_sys_hosted_kubelet() {
       --privileged=true \
       --cidfile=${KUBELET_MASTER_CIDFILE} \
       --name ${KUBELET_NAME} \
-      ${HYPERKUBE_IMAGE_REPO}:${HYPERKUBE_VERSION} \
+      ${HYPERKUBE_IMAGE_REPO}:${KUBERNETES_VERSION} \
       /hyperkube kubelet \
         --allow_privileged=true \
         --api-servers=http://127.0.0.1:8080 \
