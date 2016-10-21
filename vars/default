@@ -3,8 +3,7 @@
 # Global vars
 
 # Kubernetes version to install
-KUBERNETES_VERSION="v1.4.1"
-HYPERKUBE_VERSION=${KUBERNETES_VERSION}
+KUBERNETES_VERSION="v1.4.3"
 
 # Docker
 DOCKER="/usr/bin/docker"
@@ -14,7 +13,7 @@ DOCKER_DEFAULT="/etc/default/docker"
 HYPERKUBE_IMAGE_REPO="gcr.io/google_containers/hyperkube"
 
 # hyperkube settings
-HYPERKUBE_BIN_SOURCE="https://storage.googleapis.com/kubernetes-release/release/${HYPERKUBE_VERSION}/bin/linux/amd64/hyperkube"
+HYPERKUBE_BIN_SOURCE="https://storage.googleapis.com/kubernetes-release/release/${KUBERNETES_VERSION}/bin/linux/amd64/hyperkube"
 HYPERKUBE="/usr/bin/hyperkube"
 
 # kubectl settings

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # backup Docker defaults
-cp /etc/default/docker /tmp/docker.bak
+cp /etc/default/docker /tmp/docker
 
 # remount /var/lib/kubelet as shared to be able to access from within other # Pods
 umount -l $(mount | grep /var/lib/kubelet | awk '{print $3}') > /dev/null 2>&1

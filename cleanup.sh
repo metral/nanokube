@@ -7,6 +7,6 @@ kubectl delete --namespace=default deployments,rc,rs,pods,svc,ing,secrets,config
 rm -rf /tmp/*.cid
 
 # reset Docker
-cp /tmp/docker.bak /etc/default/docker
+cp /tmp/docker /etc/default/docker
 service docker restart
 docker ps -a | awk '{print $1}' | grep -v CONTAINER | xargs docker rm -f

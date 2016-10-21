@@ -22,10 +22,9 @@ project draws from k8s' [local-up-cluster.sh](https://github.com/kubernetes/kube
 
 nanokube has only been tested on a system with the following specs:
 
-* Vanilla Ubuntu 16.04
-* x86_64 architecture
-* 8GB of RAM
-* 8 cores
+* Ubuntu 16.04 x86_64
+* 8 GB of RAM
+* 8 CPU cores
 * Docker v1.11.2
 * Capable of using `docker run --privileged` (for a Self-Hosted install)
 * Capable of reconfiguring Docker networking to use flannel
@@ -34,15 +33,16 @@ nanokube has only been tested on a system with the following specs:
 ### What's Included?
 
 * Installed Components
-  * etcd
-  * flannel
-  * Master components (`kube-apiserver`, `kube-controller-manager`, `kube-scheduler`)
-  * Node components (`kubelet`, `kube-proxy`)
-  * `hyperkube` binary & Docker image
-  * `kubectl` CLI
-* The ability to choose a particular version of k8s to use
-* The option to install an all-in-one k8s cluster using traditional, system-hosted binaries, or the [self-hosted](https://github.com/kubernetes/kubernetes/issues/246#issuecomment-64533959) k8s model
-* Sensible defaults for all k8s Master & Node component configurations
+  * etcd - v2.3.7
+  * flannel - v0.6.1
+  * Kubernetes - v1.4.3
+    * Master components (`kube-apiserver`, `kube-controller-manager`, `kube-scheduler`)
+    * Node components (`kubelet`, `kube-proxy`)
+    * `hyperkube` binary & Docker image
+    * `kubectl` CLI
+* The ability to set a particular version of k8s to use (in ./vars)
+* The option to install an all-in-one k8s cluster using traditional system-hosted binaries, or the [self-hosted](https://github.com/kubernetes/kubernetes/issues/246#issuecomment-64533959) k8s model
+* Sensible defaults & configuration settings for the k8s Master & Node components
   * These defaults are intended to provide insight into how a k8s cluster should be configured, as well as,
   what addons can & should be added
 * TLS for cluster communication using self-signed certs
@@ -89,21 +89,37 @@ Kubernetes components that comprise a cluster.
 
 ### Setup & Use nanokube
 
+**0. Clone nanokube**
+
+  ```bash
+  // Install basic dependencies
+  ./install_deps.sh
+
+  git clone https://github.com/metral/nanokube
+  cd nanokube
+  ```
+
 **1. Install Dependencies**
+
+  * Dependencies
+  
+   ```bash
+   // Enable AUFS
+   apt-get update && apt-get install linux-image-extra-$(uname -r) -y && modprobe aufs
+
+   ```
 
   * Docker *(Skip this if already installed)*
 
   ```bash
-  curl -sSL https://get.docker.com/ | sh
+  apt-get install apt-transport-https ca-certificates
+  apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D
+  echo "deb https://apt.dockerproject.org/repo ubuntu-xenial main" > /etc/apt/sources.list.d/docker.list
+  apt-get update && apt-get install docker-engine=1.11.2-0~xenial -y
   ```
 
   **Note:** Installing Docker with the previous command on a systemd-enabled distro
-  requires [this fix](https://github.com/kubernetes/kubernetes-anywhere/blob/master/FIXES.md) to be applied.
-  * Misc. Dependencies
-  
-   ```bash
-   ./install_deps.sh
-   ```
+  requires [this fix](https://github.com/kubernetes/kubernetes-anywhere/blob/e9fbf9b6a607a026cacf45c9f9a8b280ee1eea49/FIXES.md) to be applied.
 
 **2. Configure settings**
 
@@ -157,6 +173,7 @@ The health of the cluster is reported in `nanokube`, but to verify the component
 #### Verify that the Master is running
 ```bash
 kubectl cluster-info
+kubectl version
 ```
 
 #### Check component statuses
